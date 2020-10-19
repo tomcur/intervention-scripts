@@ -12,37 +12,36 @@
 
 NUMBER_OF_EPISODES=4
 
-
 case "$1" in
-  "carla")
-    # Start Carla
-    cd "${INTERVENTION_CARLA_DIRECTORY}"
-    >&2 echo "Starting forked Carla process (probably on GPU ${CUDA_VISIBLE_DEVICES})"
+    "carla")
+        # Start Carla
+        cd "${INTERVENTION_CARLA_DIRECTORY}"
+        echo >&2 "Starting forked Carla process (probably on GPU ${CUDA_VISIBLE_DEVICES})"
 
-    DISPLAY= \
-        ./CarlaUE4.sh -opengl
-     ;;
-  "intervention")
-     . ./prepare-intervention-env.sh
+        DISPLAY= \
+            ./CarlaUE4.sh -opengl
+        ;;
+    "intervention")
+        . ./prepare-intervention-env.sh
 
-    >&2 echo "Using GPU ${CUDA_VISIBLE_DEVICES} as CUDA visible device"
-    DATA_DIRECTORY="${INTERVENTION_DATASET_DIRECTORY}/$(date --iso-8601)-teacher-examples"
-    >&2 echo "Starting intervention learning data collection. Data directory: ${DATA_DIRECTORY}"
+        echo >&2 "Using GPU ${CUDA_VISIBLE_DEVICES} as CUDA visible device"
+        DATA_DIRECTORY="${INTERVENTION_DATASET_DIRECTORY}/$(date --iso-8601)-teacher-examples"
+        echo >&2 "Starting intervention learning data collection. Data directory: ${DATA_DIRECTORY}"
 
-    LD_LIBRARY_PATH="${CONDA_PREFIX}/lib" \
-    xvfb-run \
-         intervention-learning collect-teacher-examples \
-        -t "${INTERVENTION_LBC_BIRDVIEW_CHECKPOINT}" \
-        -n $NUMBER_OF_EPISODES \
-        -d "${DATA_DIRECTORY}"
-    ;;
-  *)
-    . ./prepare-carla-env.sh
+        LD_LIBRARY_PATH="${CONDA_PREFIX}/lib" \
+            xvfb-run \
+            intervention-learning collect-teacher-examples \
+            -t "${INTERVENTION_LBC_BIRDVIEW_CHECKPOINT}" \
+            -n $NUMBER_OF_EPISODES \
+            -d "${DATA_DIRECTORY}"
+        ;;
+    *)
+        . ./prepare-carla-env.sh
 
-    srun --ntasks=1 --mem=6G --gres=gpu:tesla:1 --exclusive ./job-collect-teacher-examples.sh carla &
-    sleep 10
-    srun --ntasks=1 --mem=13G --gres=gpu:tesla:1 --exclusive ./job-collect-teacher-examples.sh intervention
+        srun --ntasks=1 --mem=6G --gres=gpu:tesla:1 --exclusive ./job-collect-teacher-examples.sh carla &
+        sleep 10
+        srun --ntasks=1 --mem=13G --gres=gpu:tesla:1 --exclusive ./job-collect-teacher-examples.sh intervention
 
-    >&2 echo "Data collection stopped"
-    ;;
+        echo >&2 "Data collection stopped"
+        ;;
 esac
