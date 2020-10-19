@@ -1,0 +1,18 @@
+name: intervention
+channels:
+  - defaults
+  - conda-forge
+  - conda-forge/label/old_name
+dependencies:
+  - libstdcxx-ng=7.5
+  - python=3.7
+  - pip
+  - tbb
+  # libproj.so.9 (and patch version bumps break the ABI...):
+  - proj.4=4.9.1 
+  # libjpeg.so.8:
+  - jpeg=8d 
+  # libpng16.so.16.37.0:
+  - libpng=1.6.37 
+  # libtiff.so.5:
+  # - libtiff # but Conda cannot solve dependency conflict with jpeg=8d... it seems we, luckily, don't actually need it at runtime
