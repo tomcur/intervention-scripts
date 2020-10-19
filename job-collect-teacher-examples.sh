@@ -13,18 +13,11 @@
 NUMBER_OF_EPISODES=4
 
 
-
-# Carla seems to always take the first GPU in CUDA_VISIBLE_DEVICES (it uses OpenGL).
-# Let's give the second one to our application for CUDA.
-CARLA_GPU="$(cut -d',' -f1 <<<$CUDA_VISIBLE_DEVICES)"
-INTERVENTION_GPU="$(cut -d',' -f2 <<<$CUDA_VISIBLE_DEVICES)"
-
-
 case "$1" in
   "carla")
     # Start Carla
     cd "${INTERVENTION_CARLA_DIRECTORY}"
-    >&2 echo "Starting forked Carla process (probably on GPU ${CARLA_GPU})"
+    >&2 echo "Starting forked Carla process (probably on GPU ${CUDA_VISIBLE_DEVICES})"
 
     DISPLAY= \
         ./CarlaUE4.sh -opengl
@@ -32,12 +25,11 @@ case "$1" in
   "intervention")
      . ./prepare-intervention-env.sh
 
-    >&2 echo "Using GPU ${INTERVENTION_GPU} as CUDA visible device"
+    >&2 echo "Using GPU ${CUDA_VISIBLE_DEVICES} as CUDA visible device"
     DATA_DIRECTORY="${INTERVENTION_DATASET_DIRECTORY}/$(date --iso-8601)-teacher-examples"
     >&2 echo "Starting intervention learning data collection. Data directory: ${DATA_DIRECTORY}"
 
     LD_LIBRARY_PATH="${CONDA_PREFIX}/lib" \
-    CUDA_VISIBLE_DEVICES=$INTERVENTION_GPU \
     xvfb-run \
          intervention-learning collect-teacher-examples \
         -t "${INTERVENTION_LBC_BIRDVIEW_CHECKPOINT}" \
