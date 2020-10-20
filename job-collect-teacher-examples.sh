@@ -37,9 +37,11 @@ case "$1" in
     *)
         . ./prepare-carla-env.sh
 
-        srun --ntasks=1 --mem=6G --gres=gpu:tesla:1 --exclusive ./job-collect-teacher-examples.sh carla &
+        srun --job-name=simulator --ntasks=1 --mem=6G --gres=gpu:tesla:1 --exclusive \
+            ./job-collect-teacher-examples.sh carla &
         sleep 10
-        srun --ntasks=1 --mem=13G --gres=gpu:tesla:1 --exclusive ./job-collect-teacher-examples.sh intervention
+        srun --job-name=collector --ntasks=1 --mem=13G --gres=gpu:tesla:1 --exclusive \
+            ./job-collect-teacher-examples.sh intervention
 
         echo >&2 "Data collection stopped"
         ;;
