@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+# Run Carla and a teacher model to collect teacher driving data.
+
 #SBATCH --partition=gpu
 #SBATCH --job-name=int-collect-teacher
 #SBATCH --nodes=1
