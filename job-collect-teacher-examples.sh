@@ -8,7 +8,6 @@
 #SBATCH --cpus-per-task=3
 #SBATCH --mem=20G
 #SBATCH --gres=gpu:tesla:2
-#SBATCH --exclude=falcon[6]
 
 NUMBER_OF_EPISODES=4
 
