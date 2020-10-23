@@ -26,7 +26,6 @@ case "$1" in
         . ./prepare-intervention-env.sh
 
         echo >&2 "Using GPU ${CUDA_VISIBLE_DEVICES} as CUDA visible device"
-        DATA_DIRECTORY="${INTERVENTION_DATASET_DIRECTORY}/$(date --iso-8601)-teacher-examples"
         echo >&2 "Starting intervention learning data collection. Data directory: ${DATA_DIRECTORY}"
 
         LD_LIBRARY_PATH="${CONDA_PREFIX}/lib" \
@@ -39,13 +38,17 @@ case "$1" in
     *)
         . ./prepare-carla-env.sh
 
-
         srun --job-name=simulator --ntasks=1 --mem=6G --gres=gpu:tesla:1 --exclusive \
             ./job-collect-teacher-examples.sh carla &
         sleep 10
+
+        export DATA_DIRECTORY=$(mktemp)
         srun --job-name=collector --ntasks=1 --mem=13G --gres=gpu:tesla:1 --exclusive \
             ./job-collect-teacher-examples.sh intervention
 
         echo >&2 "Data collection stopped"
+        echo >&2 "Merging data from ${DATA_DIRECTORY} into ${INTERVENTION_DATASET_DIRECTORY}"
+        ./merge-datasets.sh "${DATA_DIRECTORY}" "${INTERVENTION_DATASET_DIRECTORY}"
+        echo >&2 "Data synced"
         ;;
 esac
