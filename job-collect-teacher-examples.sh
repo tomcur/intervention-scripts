@@ -38,9 +38,7 @@ case "$1" in
         ;;
     *)
         . ./prepare-carla-env.sh
-        . ./utils.sh
 
-        export CARLA_WORLD_PORT=$(get_available_carla_port)
 
         srun --job-name=simulator --ntasks=1 --mem=6G --gres=gpu:tesla:1 --exclusive \
             ./job-collect-teacher-examples.sh carla &
