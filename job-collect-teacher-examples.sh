@@ -42,8 +42,7 @@ case "$1" in
             ./job-collect-teacher-examples.sh carla &
         sleep 10
 
-        export DATA_DIRECTORY=$(mktemp)
-        mkdir -p "${DATA_DIRECTORY}"
+        export DATA_DIRECTORY=$(mktemp --directory)
 
         srun --job-name=collector --ntasks=1 --mem=13G --gres=gpu:tesla:1 --exclusive \
             ./job-collect-teacher-examples.sh intervention
