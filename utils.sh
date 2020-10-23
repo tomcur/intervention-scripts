@@ -25,5 +25,6 @@ function get_available_carla_port() {
 
 function tree_sha256_hash() {
     # Calculate a SHA256 hash of all files in a directory tree.
-    echo $(cd "${1}" && find . -type f -print0 | sort -z | xargs -0 sha256sum | sha256sum | awk '{ print $1 }')
+    LC_ALL=POSIX \
+        echo $(cd "${1}" && find . -type f -print0 | sort -z | xargs -0 sha256sum | sha256sum | awk '{ print $1 }')
 }
