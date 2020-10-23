@@ -46,6 +46,8 @@ case "$1" in
         srun --job-name=collector --ntasks=1 --mem=13G --gres=gpu:tesla:1 --exclusive \
             ./job-collect-teacher-examples.sh intervention
 
+        INTERVENTION_DATASET_DIRECTORY=/gpfs/hpc/projects/Bolt/end-to-end/carla/datasets/$(date --iso-8601=seconds)
+
         echo >&2 "Data collection stopped"
         echo >&2 "Merging data from ${DATA_DIRECTORY} into ${INTERVENTION_DATASET_DIRECTORY}"
         ./merge-datasets.sh "${DATA_DIRECTORY}" "${INTERVENTION_DATASET_DIRECTORY}"
