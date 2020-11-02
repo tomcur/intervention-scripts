@@ -10,7 +10,7 @@ export INTERVENTION_CARLA_DIRECTORY=/tmp/CARLA_0.9.10.1_RSS-7a916435-0cf2-4e4a-a
 CARLA_HASH="9bcfd1021e04366fd3356588ee3b09213069cb888e7ef4c574e406e0cdd9c16e"
 
 (
-    flock -s 200
+    flock -x 200
     echo >&2 "Checking Carla simulator checksum"
     hash=$(tree_sha256_hash "${INTERVENTION_CARLA_DIRECTORY}")
 

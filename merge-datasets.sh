@@ -9,7 +9,7 @@ TARGET=$2
 [ ! -d "${TARGET}" ] && mkdir -p "${TARGET}"
 
 (
-    flock -s 201
+    flock -x 201
     if [ -f "${TARGET}/episodes.csv" ]; then
         tail --lines=+2 "${SOURCE}/episodes.csv" >>"${TARGET}/episodes.csv"
     else
