@@ -3,7 +3,7 @@
 EPISODES_PER_JOB=5
 JOBS=40
 DATA_DIRECTORY=/gpfs/hpc/projects/Bolt/end-to-end/carla/datasets/$(date --iso-8601=seconds)-on-policy
-STUDENT_CHECKPOINT=/gpfs/hpc/home/thomas93/intervention-models/student/2020-10-26-imitation-epoch-8.pth
+STUDENT_CHECKPOINT=/gpfs/hpc/projects/Bolt/end-to-end/carla/checkpoints/2020-12-18-imitation-ce/24.pth
 
 job=1
 while [ $job -le $JOBS ]; do
