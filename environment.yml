@@ -7,6 +7,7 @@ dependencies:
   - libstdcxx-ng=7.5
   - python=3.7
   - pip
+  - setuptools
   - tbb
   # libproj.so.9 (and patch version bumps break the ABI...):
   - proj.4=4.9.1 
