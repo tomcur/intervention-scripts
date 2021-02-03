@@ -15,10 +15,12 @@ sys.path.append(os.getcwd())
 import config
 
 
-def spawn_carla(cuda_device: int, carla_world_port: int) -> asyncio.subprocess.Process:
+async def spawn_carla(
+    cuda_device: int, carla_world_port: int
+) -> asyncio.subprocess.Process:
     """Spawns CARLA simulator in the background. Returns the process handle."""
 
-    return asyncio.create_subprocess_shell(
+    return await asyncio.create_subprocess_shell(
         "DISPLAY= SDL_VIDEODRIVER=offscreen "
         f"SDL_HINT_CUDA_DEVICE={cuda_device} "
         f"{config.INTERVENTION_CARLA_DIRECTORY}/CarlaUE4.sh "
@@ -33,7 +35,7 @@ async def execute(checkpoint_file: Path, data_path: Path, cuda_device: int) -> N
 
     carla_world_port = 5000 + cuda_device * 10
 
-    carla_process = spawn_carla(cuda_device, carla_world_port)
+    carla_process = await spawn_carla(cuda_device, carla_world_port)
     print(f"Spawned CARLA, pid: {carla_process.pid}")
 
     await asyncio.sleep(5.0)
