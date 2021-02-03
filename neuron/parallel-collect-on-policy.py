@@ -14,6 +14,8 @@ import tempfile
 sys.path.append(os.getcwd())
 import config
 
+open_processes = set()
+
 
 async def spawn_carla(
     cuda_device: int, carla_world_port: int
@@ -68,6 +70,7 @@ async def execute(checkpoint_file: Path, data_path: Path, cuda_device: int) -> N
     carla_world_port = 5000 + cuda_device * 10
 
     carla_process = await spawn_carla(cuda_device, carla_world_port)
+    open_processes.add(carla_process)
     print(f"Spawned CARLA, pid: {carla_process.pid}")
 
     await asyncio.sleep(5.0)
@@ -76,17 +79,22 @@ async def execute(checkpoint_file: Path, data_path: Path, cuda_device: int) -> N
         collection_process = await spawn_intervention(
             cuda_device, carla_world_port, checkpoint_file, Path(temp_path)
         )
+        open_processes.add(collection_process)
         await collection_process.wait()
+        open_processes.remove(collection_process)
 
         merge_process = await asyncio.create_subprocess_exec(
             "../merge-datasets.sh",
             f"{temp_path}",
             f"{data_path}",
         )
+        open_processes.add(merge_process)
         await merge_process.wait()
+        open_processes.remove(merge_process)
 
     carla_process.terminate()
     await carla_process.wait()
+    open_processes.remove(carla_process)
 
 
 async def executor(
@@ -108,6 +116,19 @@ async def run(checkpoints_and_names: List[Union[Path, str]]) -> None:
     )
 
 
+async def kill_subprocesses() -> None:
+    for p in open_processes:
+        try:
+            p.terminate()
+        except Exception:
+            pass
+    for p in open_processes:
+        try:
+            await p.wait()
+        except Exception:
+            pass
+
+
 if __name__ == "__main__":
     checkpoints_and_names = []
     for (checkpoint_directory, checkpoints) in config.CHECKPOINTS:
@@ -125,4 +146,7 @@ if __name__ == "__main__":
 
     loop = asyncio.new_event_loop()
     asyncio.get_child_watcher().attach_loop(loop)
-    loop.run_until_complete(run(checkpoints_and_names))
+    try:
+        loop.run_until_complete(run(checkpoints_and_names))
+    finally:
+        loop.run_until_complete(kill_subprocesses())
