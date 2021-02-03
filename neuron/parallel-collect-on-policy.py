@@ -44,7 +44,7 @@ async def spawn_intervention(
     """Spawns CARLA simulator in the background. Returns the process handle."""
     environ = os.environ.copy()
     environ["CUDA_VISIBLE_DEVICES"] = f"{cuda_device}"
-    environ["TRAFFIC_MANAGER_PORT"] = f"{start_port_range}"
+    environ["CARLA_TRAFFIC_MANAGER_PORT"] = f"{start_port_range}"
     environ["CARLA_WORLD_PORT"] = f"{start_port_range+1}"
 
     return await asyncio.create_subprocess_exec(
