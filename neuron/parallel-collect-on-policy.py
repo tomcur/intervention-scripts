@@ -39,12 +39,13 @@ async def spawn_carla(
 
 
 async def spawn_intervention(
-    cuda_device: int, carla_world_port: int, checkpoint_file: Path, data_path: Path
+    cuda_device: int, start_port_range: int, checkpoint_file: Path, data_path: Path
 ) -> asyncio.subprocess.Process:
     """Spawns CARLA simulator in the background. Returns the process handle."""
     environ = os.environ.copy()
     environ["CUDA_VISIBLE_DEVICES"] = f"{cuda_device}"
-    environ["CARLA_WORLD_PORT"] = f"{carla_world_port}"
+    environ["TRAFFIC_MANAGER_PORT"] = f"{start_port_range}"
+    environ["CARLA_WORLD_PORT"] = f"{start_port_range+1}"
 
     return await asyncio.create_subprocess_exec(
         "xvfb-run",
@@ -66,16 +67,16 @@ async def spawn_intervention(
 async def execute(checkpoint_file: Path, data_path: Path, cuda_device: int) -> None:
     print(f"Handling job for {checkpoint_file}")
 
-    carla_world_port = 5000 + cuda_device * 10
+    start_port_range = 5000 + cuda_device * 10
 
-    carla_process = await spawn_carla(cuda_device, carla_world_port)
+    carla_process = await spawn_carla(cuda_device, start_port_range + 1)
     print(f"Spawned CARLA, pid: {carla_process.pid}")
 
     await asyncio.sleep(5.0)
 
     with tempfile.TemporaryDirectory(prefix="intervention-on-policy-") as temp_path:
         collection_process = await spawn_intervention(
-            cuda_device, carla_world_port, checkpoint_file, Path(temp_path)
+            cuda_device, start_port_range, checkpoint_file, Path(temp_path)
         )
         await collection_process.wait()
 
