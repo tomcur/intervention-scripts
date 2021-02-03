@@ -11,7 +11,9 @@ from datetime import datetime
 from pathlib import Path
 import tempfile
 
-from . import config
+sys.path.append(os.getcwd())
+import config
+
 
 def spawn_carla(cuda_device: int, carla_world_port: int) -> asyncio.subprocess.Process:
     """Spawns CARLA simulator in the background. Returns the process handle."""
