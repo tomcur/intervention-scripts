@@ -21,6 +21,7 @@ INTERVENTION_LBC_BIRDVIEW_CHECKPOINT = (
     Path.home() / "intervention-models/lbc-birdview/model-128.th"
 )
 OUT_DATA_PATH = Path.home() / "datasets"
+CHECKPOINTS_PATH = Path.home() / "checkpoints"
 
 EPISODES_PER_CHECKPOINT: int = 30
 
@@ -101,7 +102,9 @@ if __name__ == "__main__":
     for (checkpoint_directory, checkpoints) in CHECKPOINTS:
         for checkpoint in checkpoints:
             for episode_num in range(EPISODES_PER_CHECKPOINT):
-                checkpoint_file = Path(checkpoint_directory) / f"{checkpoint}.pth"
+                checkpoint_file = (
+                    CHECKPOINTS_PATH / checkpoint_directory / f"{checkpoint}.pth"
+                )
                 checkpoints_and_names.append(
                     (
                         checkpoint_file,
