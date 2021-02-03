@@ -72,7 +72,10 @@ async def executor(
 
 async def run(checkpoints_and_names: List[Union[Path, str]]) -> None:
     await asyncio.gather(
-        *[executor(checkpoints_and_names, cuda_device) for cuda_device in CUDA_DEVICES]
+        *[
+            executor(checkpoints_and_names, cuda_device)
+            for cuda_device in config.CUDA_DEVICES
+        ]
     )
 
 
