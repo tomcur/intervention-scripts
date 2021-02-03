@@ -97,4 +97,5 @@ if __name__ == "__main__":
                 )
 
     loop = asyncio.new_event_loop()
+    asyncio.get_child_watcher().attach_loop(loop)
     loop.run_until_complete(run(checkpoints_and_names))
