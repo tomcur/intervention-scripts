@@ -23,9 +23,10 @@ async def spawn_carla(
     environ = os.environ.copy()
     environ["DISPLAY"] = ""
     environ["SDL_HINT_CUDA_DEVICE"] = f"{cuda_device}"
+    environ["UE4_PROJECT_ROOT"] = f"{config.INTERVENTION_CARLA_DIRECTORY}"
 
     return await asyncio.create_subprocess_exec(
-        f"{config.INTERVENTION_CARLA_DIRECTORY}/CarlaUE4.sh",
+        f"{config.INTERVENTION_CARLA_DIRECTORY}/CarlaUE4/Binaries/Linux/CarlaUE4-Linux-Shipping",
         "-opengl",
         "-nosound",
         "-ResX=800",
