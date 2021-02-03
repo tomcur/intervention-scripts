@@ -1,0 +1,24 @@
+from pathlib import Path
+
+
+#: Ids of CUDA devices to use.
+CUDA_DEVICES = [0]  # , 1, 2, 3]
+
+INTERVENTION_CARLA_DIRECTORY = (
+    Path.home() / "code/autonomous-driving/carla/CARLA_0.9.10.1_RSS"
+)
+INTERVENTION_LBC_BIRDVIEW_CHECKPOINT = (
+    Path.home() / "intervention-models/lbc-birdview/model-128.th"
+)
+OUT_DATA_PATH = Path.home() / "datasets"
+CHECKPOINTS_PATH = Path.home() / "checkpoints"
+
+EPISODES_PER_CHECKPOINT: int = 30
+
+#: List of tuples of checkpoint directories and lists of checkpoint numbers to
+# use of those directories.
+CHECKPOINTS = [
+    ("2021-01-25-intervention-ce-di0.0-dt10.0", [25, 27]),
+    ("2021-01-25-intervention-ce-di0.0-dt10.0", [25, 27]),
+    ("2021-01-25-intervention-ce-di0.0-dt10.0", [25, 27]),
+]

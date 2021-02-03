@@ -11,27 +11,7 @@ from datetime import datetime
 from pathlib import Path
 import tempfile
 
-#: Ids of CUDA devices to use.
-CUDA_DEVICES = [0]  # , 1, 2, 3]
-
-INTERVENTION_CARLA_DIRECTORY = (
-    Path.home() / "code/autonomous-driving/carla/CARLA_0.9.10.1_RSS"
-)
-INTERVENTION_LBC_BIRDVIEW_CHECKPOINT = (
-    Path.home() / "intervention-models/lbc-birdview/model-128.th"
-)
-OUT_DATA_PATH = Path.home() / "datasets"
-CHECKPOINTS_PATH = Path.home() / "checkpoints"
-
-EPISODES_PER_CHECKPOINT: int = 30
-
-#: List of tuples of checkpoint directories and lists of checkpoint numbers to
-# use of those directories.
-CHECKPOINTS = [
-    ("2021-01-25-intervention-ce-di0.0-dt10.0", [25, 27]),
-    ("2021-01-25-intervention-ce-di0.0-dt10.0", [25, 27]),
-    ("2021-01-25-intervention-ce-di0.0-dt10.0", [25, 27]),
-]
+from . import config
 
 def spawn_carla(cuda_device: int, carla_world_port: int) -> asyncio.subprocess.Process:
     """Spawns CARLA simulator in the background. Returns the process handle."""
@@ -39,7 +19,7 @@ def spawn_carla(cuda_device: int, carla_world_port: int) -> asyncio.subprocess.P
     return asyncio.create_subprocess_shell(
         "DISPLAY= SDL_VIDEODRIVER=offscreen "
         f"SDL_HINT_CUDA_DEVICE={cuda_device} "
-        f"{INTERVENTION_CARLA_DIRECTORY}/CarlaUE4.sh "
+        f"{config.INTERVENTION_CARLA_DIRECTORY}/CarlaUE4.sh "
         "-opengl -nosound -ResX=800 -ResY=600 -windowed "
         f"-carla-world-port={carla_world_port}",
         stdout=sys.stdout,
@@ -63,7 +43,7 @@ async def execute(checkpoint_file: Path, data_path: Path, cuda_device: int) -> N
             "xvfb-run "
             "intervention-learning collect-on-policy "
             f'-s "{checkpoint_file}" '
-            f'-t "{INTERVENTION_LBC_BIRDVIEW_CHECKPOINT}" '
+            f'-t "{config.INTERVENTION_LBC_BIRDVIEW_CHECKPOINT}" '
             "-n 1"
             f"-d {temp_path}"
         )
@@ -83,7 +63,7 @@ async def executor(
 ) -> None:
     while len(checkpoints_and_names) > 0:
         checkpoint_file, name = checkpoints_and_names.pop(0)
-        data_path = OUT_DATA_PATH / name
+        data_path = config.OUT_DATA_PATH / name
 
         await execute(checkpoint_file, data_path, cuda_device)
 
@@ -96,11 +76,11 @@ async def run(checkpoints_and_names: List[Union[Path, str]]) -> None:
 
 if __name__ == "__main__":
     checkpoints_and_names = []
-    for (checkpoint_directory, checkpoints) in CHECKPOINTS:
+    for (checkpoint_directory, checkpoints) in config.CHECKPOINTS:
         for checkpoint in checkpoints:
-            for episode_num in range(EPISODES_PER_CHECKPOINT):
+            for episode_num in range(config.EPISODES_PER_CHECKPOINT):
                 checkpoint_file = (
-                    CHECKPOINTS_PATH / checkpoint_directory / f"{checkpoint}.pth"
+                    config.CHECKPOINTS_PATH / checkpoint_directory / f"{checkpoint}.pth"
                 )
                 checkpoints_and_names.append(
                     (
