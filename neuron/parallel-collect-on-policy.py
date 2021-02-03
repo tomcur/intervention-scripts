@@ -20,18 +20,45 @@ async def spawn_carla(
 ) -> asyncio.subprocess.Process:
     """Spawns CARLA simulator in the background. Returns the process handle."""
 
-    return await asyncio.create_subprocess_shell(
-        "DISPLAY= SDL_VIDEODRIVER=offscreen "
-        f"SDL_HINT_CUDA_DEVICE={cuda_device} "
-        f"{config.INTERVENTION_CARLA_DIRECTORY}/CarlaUE4.sh "
-        "-opengl -nosound -ResX=800 -ResY=600 -windowed "
+    environ = os.environ.copy()
+    environ["DISPLAY"] = ""
+    environ["SDL_HINT_CUDA_DEVICE"] = f"{cuda_device}"
+
+    return await asyncio.create_subprocess_exec(
+        f"{config.INTERVENTION_CARLA_DIRECTORY}/CarlaUE4.sh",
+        "-opengl",
+        "-nosound",
+        "-ResX=800",
+        "-ResY=600",
+        "-windowed",
         f"-carla-world-port={carla_world_port}",
+        env=environ,
+        stdout=sys.stdout,
+    )
+
+
+async def spawn_intervention(
+    cuda_device: int, carla_world_port: int, checkpoint_file: Path, data_path: Path
+) -> asyncio.subprocess.Process:
+    """Spawns CARLA simulator in the background. Returns the process handle."""
+    environ = os.environ.copy()
+    environ["CUDA_VISIBLE_DEVICES"] = f"{cuda_device}"
+    environ["CARLA_WORLD_PORT"] = f"{carla_world_port}"
+
+    return await asyncio.create_subprocess_exec(
+        "xvfb-run",
+        "intervention-learning",
+        "collect-on-policy",
+        f"-s={checkpoint_file}",
+        f"-t={config.INTERVENTION_LBC_BIRDVIEW_CHECKPOINT}",
+        "-n=1",
+        f"-d={data_path}",
         stdout=sys.stdout,
     )
 
 
 async def execute(checkpoint_file: Path, data_path: Path, cuda_device: int) -> None:
-    print(f"Spawning job #{episode_num+1} for {checkpoint_file}")
+    print(f"Handling job for {checkpoint_file}")
 
     carla_world_port = 5000 + cuda_device * 10
 
@@ -41,20 +68,15 @@ async def execute(checkpoint_file: Path, data_path: Path, cuda_device: int) -> N
     await asyncio.sleep(5.0)
 
     with tempfile.TemporaryDirectory(prefix="intervention-on-policy-") as temp_path:
-        collection_process = await asyncio.create_subprocess_shell(
-            "LD_LIBRARY_PATH=$CONDA_PREFIX "
-            f"CARLA_WORLD_PORT={carla_world_port} "
-            "xvfb-run "
-            "intervention-learning collect-on-policy "
-            f'-s "{checkpoint_file}" '
-            f'-t "{config.INTERVENTION_LBC_BIRDVIEW_CHECKPOINT}" '
-            "-n 1 "
-            f"-d {temp_path}"
+        collection_process = await spawn_intervention(
+            cuda_device, carla_world_port, checkpoint_file, Path(temp_path)
         )
         await collection_process.wait()
 
-        merge_process = await asyncio.create_subprocess_shell(
-            f'../merge-datasets.sh "{temp_path}" "{data_path}"'
+        merge_process = await asyncio.create_subprocess_exec(
+            "../merge-datasets.sh",
+            f"{temp_path}",
+            f"{data_path}",
         )
         await merge_process.wait()
 
