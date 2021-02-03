@@ -33,21 +33,15 @@ CHECKPOINTS = [
     ("2021-01-25-intervention-ce-di0.0-dt10.0", [25, 27]),
 ]
 
+def spawn_carla(cuda_device: int, carla_world_port: int) -> asyncio.subprocess.Process:
+    """Spawns CARLA simulator in the background. Returns the process handle."""
 
-def spawn_carla(cuda_device: int, carla_world_port: int) -> subprocess.Popen:
-    """Spawns CARLA simulator in the background. Returns the PID."""
-    # carla_env = os.environ.copy()
-    # carla_env["DISPLAY"] = ""
-    # carla_env["SDL_VIDEODRIVER"] = "offscreen"
-    # carla_env["SDL_HINT_CUDA_DEVICE"] = f"{cuda_device}"
-
-    return subprocess.Popen(
+    return asyncio.create_subprocess_shell(
         "DISPLAY= SDL_VIDEODRIVER=offscreen "
         f"SDL_HINT_CUDA_DEVICE={cuda_device} "
         f"{INTERVENTION_CARLA_DIRECTORY}/CarlaUE4.sh "
         "-opengl -nosound -ResX=800 -ResY=600 -windowed "
         f"-carla-world-port={carla_world_port}",
-        shell=True,
         stdout=sys.stdout,
     )
 
