@@ -57,7 +57,7 @@ async def execute(checkpoint_file: Path, data_path: Path, cuda_device: int) -> N
     await asyncio.sleep(5.0)
 
     with tempfile.TemporaryDirectory(prefix="intervention-on-policy-") as temp_path:
-        await asyncio.create_subprocess_shell(
+        collection_process = await asyncio.create_subprocess_shell(
             "LD_LIBRARY_PATH=$CONDA_PREFIX "
             f"CARLA_WORLD_PORT={carla_world_port} "
             "xvfb-run "
@@ -67,12 +67,15 @@ async def execute(checkpoint_file: Path, data_path: Path, cuda_device: int) -> N
             "-n 1"
             f"-d {temp_path}"
         )
+        await collection_process.wait()
 
-        await asyncio.create_subprocess_shell(
+        merge_process = await asyncio.create_subprocess_shell(
             f'../merge-datasets.sh "{temp_path}" "{data_path}"'
         )
+        await merge_process.wait()
 
-    carla_process.kill()
+    carla_process.terminate()
+    await carla_process.wait()
 
 
 async def executor(
