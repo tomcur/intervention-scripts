@@ -48,7 +48,7 @@ async def execute(checkpoint_file: Path, data_path: Path, cuda_device: int) -> N
             "intervention-learning collect-on-policy "
             f'-s "{checkpoint_file}" '
             f'-t "{config.INTERVENTION_LBC_BIRDVIEW_CHECKPOINT}" '
-            "-n 1"
+            "-n 1 "
             f"-d {temp_path}"
         )
         await collection_process.wait()
