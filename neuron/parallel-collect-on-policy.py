@@ -49,6 +49,7 @@ async def spawn_intervention(
 
     return await asyncio.create_subprocess_exec(
         "xvfb-run",
+        "--auto-display",
         "intervention-learning",
         "collect-on-policy",
         "-s",
