@@ -11,6 +11,7 @@ INTERVENTION_LBC_BIRDVIEW_CHECKPOINT = (
     Path.home() / "intervention-models/lbc-birdview/model-128.th"
 )
 OUT_DATA_PATH = Path.home() / "datasets"
+TEMPORARY_DIRECTORY = Path.home() / "datasets" / "temp"
 CHECKPOINTS_PATH = Path.home() / "checkpoints"
 
 EPISODES_PER_CHECKPOINT: int = 30

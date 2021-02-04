@@ -75,7 +75,7 @@ async def execute(checkpoint_file: Path, data_path: Path, cuda_device: int) -> N
 
     await asyncio.sleep(5.0)
 
-    with tempfile.TemporaryDirectory(prefix="intervention-on-policy-") as temp_path:
+    with tempfile.TemporaryDirectory(prefix="intervention-on-policy-", dir=config.TEMPORARY_DIRECTORY) as temp_path:
         collection_process = await spawn_intervention(
             cuda_device, start_port_range, checkpoint_file, Path(temp_path)
         )
