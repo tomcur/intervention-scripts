@@ -128,6 +128,8 @@ async def run(checkpoints_and_names: List[Union[Path, str]]) -> None:
 if __name__ == "__main__":
     os.setpgrp()
 
+    iso_time_str = datetime.utcnow().strftime("%Y%m%dT%H%M%S")
+
     checkpoints_and_names = []
     for (checkpoint_directory, checkpoints) in config.CHECKPOINTS:
         for checkpoint in checkpoints:
@@ -138,7 +140,7 @@ if __name__ == "__main__":
                 checkpoints_and_names.append(
                     (
                         checkpoint_file,
-                        f"{datetime.now().isoformat()}-on-policy-{checkpoint_directory}-{checkpoint}",
+                        f"{iso_time_str}-on-policy-{checkpoint_directory}-{checkpoint}",
                     )
                 )
 
