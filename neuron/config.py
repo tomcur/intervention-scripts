@@ -12,6 +12,8 @@ INTERVENTION_LBC_BIRDVIEW_CHECKPOINT = (
 )
 OUT_DATA_PATH = Path.home() / "datasets"
 TEMPORARY_DIRECTORY = Path.home() / "datasets" / "temp"
+
+#: The temporary directory location, or None to automatically pick a location
 CHECKPOINTS_PATH = Path.home() / "checkpoints"
 
 EPISODES_PER_CHECKPOINT: int = 30
