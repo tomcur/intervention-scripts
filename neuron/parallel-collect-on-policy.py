@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from typing import List, Union
+from typing import List, Union, BinaryIO
 
 import os
 import sys
@@ -16,7 +16,7 @@ import config
 
 
 async def spawn_carla(
-    cuda_device: int, carla_world_port: int
+    cuda_device: int, carla_world_port: int, log_file: BinaryIO
 ) -> asyncio.subprocess.Process:
     """Spawns CARLA simulator in the background. Returns the process handle."""
 
@@ -34,12 +34,12 @@ async def spawn_carla(
         "-windowed",
         f"-carla-world-port={carla_world_port}",
         env=environ,
-        stdout=sys.stdout,
+        stdout=log_file,
     )
 
 
 async def spawn_intervention(
-    cuda_device: int, start_port_range: int, checkpoint_file: Path, data_path: Path
+    cuda_device: int, start_port_range: int, checkpoint_file: Path, data_path: Path, log_file: BinaryIO
 ) -> asyncio.subprocess.Process:
     """Spawns CARLA simulator in the background. Returns the process handle."""
     environ = os.environ.copy()
@@ -61,35 +61,42 @@ async def spawn_intervention(
         "-d",
         f"{data_path}",
         env=environ,
-        stdout=sys.stdout,
+        stdout=log_file,
     )
 
 
 async def execute(checkpoint_file: Path, data_path: Path, cuda_device: int) -> None:
-    print(f"Handling job for {checkpoint_file}")
+    print(f"{cuda_device}: Handling job for {checkpoint_file}")
+
+    log_file = open(f"log-{datetime.now().isoformat()}-cuda-device-{cuda_device}.out", "w")
 
     start_port_range = 5000 + cuda_device * 10
 
-    carla_process = await spawn_carla(cuda_device, start_port_range + 1)
-    print(f"Spawned CARLA, pid: {carla_process.pid}")
+    carla_process = await spawn_carla(cuda_device, start_port_range + 1, log_file)
+    print(f"{cuda_device}: Spawned CARLA, pid: {carla_process.pid}")
 
     await asyncio.sleep(5.0)
 
     with tempfile.TemporaryDirectory(prefix="intervention-on-policy-", dir=config.TEMPORARY_DIRECTORY) as temp_path:
         collection_process = await spawn_intervention(
-            cuda_device, start_port_range, checkpoint_file, Path(temp_path)
+            cuda_device, start_port_range, checkpoint_file, Path(temp_path), log_file
         )
+        print(f"{cuda_device}: Spawned collection, pid: {collection_process.pid}")
         await collection_process.wait()
+
 
         merge_process = await asyncio.create_subprocess_exec(
             "../merge-datasets.sh",
             f"{temp_path}",
             f"{data_path}",
+            stdout=log_file,
         )
+        print(f"{cuda_device}: Spawned data merging, pid: {collection_process.pid}")
         await merge_process.wait()
 
     carla_process.terminate()
     await carla_process.wait()
+    log_file.close()
 
 
 async def executor(
