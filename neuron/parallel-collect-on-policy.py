@@ -69,14 +69,19 @@ async def spawn_intervention(
     )
 
 
-async def execute(checkpoint_file: Path, data_path: Path, cuda_device: int) -> None:
+async def execute(
+    checkpoint_file: Path, data_path: Path, cuda_device: int, process_num: int
+) -> None:
     print(f"{cuda_device}: Handling job for {checkpoint_file}")
 
     log_file = open(
-        f"log-{datetime.now().isoformat()}-cuda-device-{cuda_device}.out", "w"
+        f"log-{datetime.now().isoformat()}-cuda-device-{cuda_device}-process-{process_num}.out",
+        "w",
     )
 
-    start_port_range = 5000 + cuda_device * 10
+    start_port_range = (
+        5000 + (process_num + cuda_device * config.PROCESSES_PER_CUDA_DEVICE) * 10
+    )
 
     carla_process = await spawn_carla(cuda_device, start_port_range + 1, log_file)
     print(f"{cuda_device}: Spawned CARLA, pid: {carla_process.pid}")
@@ -107,13 +112,13 @@ async def execute(checkpoint_file: Path, data_path: Path, cuda_device: int) -> N
 
 
 async def executor(
-    checkpoints_and_names: List[Union[Path, str]], cuda_device: int
+    checkpoints_and_names: List[Union[Path, str]], cuda_device: int, process_num: int
 ) -> None:
     while len(checkpoints_and_names) > 0:
         checkpoint_file, name = checkpoints_and_names.pop(0)
         data_path = config.OUT_DATA_PATH / name
 
-        await execute(checkpoint_file, data_path, cuda_device)
+        await execute(checkpoint_file, data_path, cuda_device, process_num)
 
 
 async def run(checkpoints_and_names: List[Union[Path, str]]) -> None:
@@ -121,6 +126,7 @@ async def run(checkpoints_and_names: List[Union[Path, str]]) -> None:
         *[
             executor(checkpoints_and_names, cuda_device)
             for cuda_device in config.CUDA_DEVICES
+            for process_num in range(config.PROCESSES_PER_CUDA_DEVICE)
         ]
     )
 

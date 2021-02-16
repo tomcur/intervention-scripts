@@ -3,6 +3,7 @@ from pathlib import Path
 
 #: Ids of CUDA devices to use.
 CUDA_DEVICES = [0]  # , 1, 2, 3]
+PROCESSES_PER_CUDA_DEVICE = 4
 
 INTERVENTION_CARLA_DIRECTORY = (
     Path.home() / "code/autonomous-driving/carla/CARLA_0.9.10.1_RSS"
