@@ -84,7 +84,7 @@ async def execute(
     )
 
     carla_process = await spawn_carla(cuda_device, start_port_range + 1, log_file)
-    print(f"{cuda_device}: Spawned CARLA, pid: {carla_process.pid}")
+    print(f"{cuda_device}, process {process_num}: Spawned CARLA, pid: {carla_process.pid} (start port range {start_port_range})")
 
     await asyncio.sleep(5.0)
 
@@ -124,7 +124,7 @@ async def executor(
 async def run(checkpoints_and_names: List[Union[Path, str]]) -> None:
     await asyncio.gather(
         *[
-            executor(checkpoints_and_names, cuda_device)
+            executor(checkpoints_and_names, cuda_device, process_num)
             for cuda_device in config.CUDA_DEVICES
             for process_num in range(config.PROCESSES_PER_CUDA_DEVICE)
         ]
