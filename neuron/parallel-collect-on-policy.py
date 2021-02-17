@@ -72,6 +72,9 @@ async def spawn_intervention(
 async def execute(
     checkpoint_file: Path, data_path: Path, cuda_device: int, process_num: int
 ) -> None:
+    """
+    :return: whether the collection process finished succesfully
+    """
     print(f"{cuda_device}: Handling job for {checkpoint_file}")
 
     log_file = open(
@@ -84,7 +87,9 @@ async def execute(
     )
 
     carla_process = await spawn_carla(cuda_device, start_port_range + 1, log_file)
-    print(f"{cuda_device}, process {process_num}: Spawned CARLA, pid: {carla_process.pid} (start port range {start_port_range})")
+    print(
+        f"{cuda_device}, process {process_num}: Spawned CARLA, pid: {carla_process.pid} (start port range {start_port_range})"
+    )
 
     await asyncio.sleep(5.0)
 
@@ -96,6 +101,9 @@ async def execute(
         )
         print(f"{cuda_device}: Spawned collection, pid: {collection_process.pid}")
         await collection_process.wait()
+
+        if collection_process.returncode != 0:
+            return False
 
         merge_process = await asyncio.create_subprocess_exec(
             "../merge-datasets.sh",
@@ -110,6 +118,8 @@ async def execute(
     await carla_process.wait()
     log_file.close()
 
+    return True
+
 
 async def executor(
     checkpoints_and_names: List[Union[Path, str]], cuda_device: int, process_num: int
@@ -118,7 +128,9 @@ async def executor(
         checkpoint_file, name = checkpoints_and_names.pop(0)
         data_path = config.OUT_DATA_PATH / name
 
-        await execute(checkpoint_file, data_path, cuda_device, process_num)
+        success = await execute(checkpoint_file, data_path, cuda_device, process_num)
+        if not success:
+            checkpoints_and_names.append((checkpoint_file, name))
 
 
 async def run(checkpoints_and_names: List[Union[Path, str]]) -> None:
