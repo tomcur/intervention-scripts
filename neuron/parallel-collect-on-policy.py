@@ -96,6 +96,7 @@ async def execute(
 
     await asyncio.sleep(5.0)
 
+    success = False
     with tempfile.TemporaryDirectory(
         prefix="intervention-on-policy-", dir=config.TEMPORARY_DIRECTORY
     ) as temp_path:
@@ -105,23 +106,23 @@ async def execute(
         print(f"{cuda_device}.{process_num}: Spawned collection, pid: {collection_process.pid}")
         await collection_process.wait()
 
-        if collection_process.returncode != 0:
-            return False
+        if collection_process.returncode == 0:
+            success = True
 
-        merge_process = await asyncio.create_subprocess_exec(
-            "../merge-datasets.sh",
-            f"{temp_path}",
-            f"{data_path}",
-            stdout=log_file,
-        )
-        print(f"{cuda_device}: Spawned data merging, pid: {collection_process.pid}")
-        await merge_process.wait()
+            merge_process = await asyncio.create_subprocess_exec(
+                "../merge-datasets.sh",
+                f"{temp_path}",
+                f"{data_path}",
+                stdout=log_file,
+            )
+            print(f"{cuda_device}.{process_num}: Spawned data merging, pid: {collection_process.pid}")
+            await merge_process.wait()
 
     carla_process.terminate()
     await carla_process.wait()
     log_file.close()
 
-    return True
+    return success
 
 
 async def executor(
