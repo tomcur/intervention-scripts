@@ -66,6 +66,7 @@ async def spawn_intervention(
         f"{data_path}",
         env=environ,
         stdout=log_file,
+        stderr=log_file,
     )
 
 
@@ -75,7 +76,7 @@ async def execute(
     """
     :return: whether the collection process finished succesfully
     """
-    print(f"{cuda_device}: Handling job for {checkpoint_file}")
+    print(f"{cuda_device}.{process_num}: Handling job for {checkpoint_file}")
 
     log_file = open(
         f"log-{datetime.now().isoformat()}-cuda-device-{cuda_device}-process-{process_num}.out",
@@ -88,7 +89,7 @@ async def execute(
 
     carla_process = await spawn_carla(cuda_device, start_port_range + 1, log_file)
     print(
-        f"{cuda_device}, process {process_num}: Spawned CARLA, pid: {carla_process.pid} (start port range {start_port_range})"
+        f"{cuda_device}.{process_num}: Spawned CARLA, pid: {carla_process.pid} (start port range {start_port_range})"
     )
 
     await asyncio.sleep(5.0)
@@ -99,7 +100,7 @@ async def execute(
         collection_process = await spawn_intervention(
             cuda_device, start_port_range, checkpoint_file, Path(temp_path), log_file
         )
-        print(f"{cuda_device}: Spawned collection, pid: {collection_process.pid}")
+        print(f"{cuda_device}.{process_num}: Spawned collection, pid: {collection_process.pid}")
         await collection_process.wait()
 
         if collection_process.returncode != 0:
@@ -130,6 +131,9 @@ async def executor(
 
         success = await execute(checkpoint_file, data_path, cuda_device, process_num)
         if not success:
+            print(
+                f"{cuda_device}.{process_num}: Collection was unsuccessful, rescheduling {name}"
+            )
             checkpoints_and_names.append((checkpoint_file, name))
 
 
