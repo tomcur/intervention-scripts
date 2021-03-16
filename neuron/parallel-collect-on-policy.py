@@ -65,6 +65,7 @@ async def spawn_intervention(
         "1",
         "-d",
         f"{data_path}",
+        "--metrics-only",
         env=environ,
         stdout=log_file,
         stderr=log_file,
