@@ -10,6 +10,7 @@ import asyncio
 from datetime import datetime
 from pathlib import Path
 import tempfile
+import random
 
 sys.path.append(os.getcwd())
 import config
@@ -129,6 +130,7 @@ async def executor(
         checkpoint_file, name = checkpoints_and_names.pop(0)
         data_path = config.OUT_DATA_PATH / name
 
+        await asyncio.sleep(random.random() * 15)
         success = await execute(checkpoint_file, data_path, cuda_device, process_num)
         if not success:
             print(
