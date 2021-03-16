@@ -94,7 +94,7 @@ async def execute(
         f"{cuda_device}.{process_num}: Spawned CARLA, pid: {carla_process.pid} (start port range {start_port_range})"
     )
 
-    await asyncio.sleep(5.0)
+    await asyncio.sleep(15.0)
 
     success = False
     with tempfile.TemporaryDirectory(
