@@ -131,6 +131,9 @@ async def execute(
                 )
                 await merge_process.wait()
         except asyncio.TimeoutError:
+            print(
+                f"{cuda_device}.{process_num}: Collection timed out, killing pid: {collection_process.pid}"
+            )
             await soft_kill(collection_process)
 
     await soft_kill(carla_process)
