@@ -72,6 +72,14 @@ async def spawn_intervention(
     )
 
 
+async def soft_kill(process: asyncio.subprocess.Process) -> None:
+    process.terminate()
+    try:
+        await asyncio.wait_for(process.wait(), timeout=10.0)
+    except asyncio.TimeoutError:
+        process.kill()
+
+
 async def execute(
     checkpoint_file: Path, data_path: Path, cuda_device: int, process_num: int
 ) -> None:
@@ -123,11 +131,10 @@ async def execute(
                 )
                 await merge_process.wait()
         except asyncio.TimeoutError:
-            collection_process.terminate()
-
+            await soft_kill(collection_process)
 
     carla_process.terminate()
-    await carla_process.wait()
+    await soft_kill(carla_process)
     log_file.close()
 
     return success
