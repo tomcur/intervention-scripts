@@ -103,20 +103,28 @@ async def execute(
         collection_process = await spawn_intervention(
             cuda_device, start_port_range, checkpoint_file, Path(temp_path), log_file
         )
-        print(f"{cuda_device}.{process_num}: Spawned collection, pid: {collection_process.pid}")
-        await collection_process.wait()
+        print(
+            f"{cuda_device}.{process_num}: Spawned collection, pid: {collection_process.pid}"
+        )
+        try:
+            await asyncio.wait_for(collection_process.wait(), timeout=10.0 * 60.0)
 
-        if collection_process.returncode == 0:
-            success = True
+            if collection_process.returncode == 0:
+                success = True
 
-            merge_process = await asyncio.create_subprocess_exec(
-                "../merge-datasets.sh",
-                f"{temp_path}",
-                f"{data_path}",
-                stdout=log_file,
-            )
-            print(f"{cuda_device}.{process_num}: Spawned data merging, pid: {collection_process.pid}")
-            await merge_process.wait()
+                merge_process = await asyncio.create_subprocess_exec(
+                    "../merge-datasets.sh",
+                    f"{temp_path}",
+                    f"{data_path}",
+                    stdout=log_file,
+                )
+                print(
+                    f"{cuda_device}.{process_num}: Spawned data merging, pid: {collection_process.pid}"
+                )
+                await merge_process.wait()
+        except asyncio.TimeoutError:
+            collection_process.terminate()
+
 
     carla_process.terminate()
     await carla_process.wait()
