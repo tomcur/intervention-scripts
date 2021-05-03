@@ -15,13 +15,13 @@ OUT_DATA_PATH = Path.home() / "datasets"
 TEMPORARY_DIRECTORY = Path.home() / "datasets" / "temp"
 
 #: The temporary directory location, or None to automatically pick a location
-CHECKPOINTS_PATH = Path.home() / "checkpoints"
+STUDENT_CHECKPOINTS_PATH = Path.home() / "checkpoints"
 
 EPISODES_PER_CHECKPOINT: int = 30
 
 #: List of tuples of checkpoint directories and lists of checkpoint numbers to
 # use of those directories.
-CHECKPOINTS = [
+STUDENT_CHECKPOINTS = [
     ("2021-01-25-intervention-ce-di0.0-dt10.0", [25, 27]),
     ("2021-01-25-intervention-ce-di0.0-dt10.0", [25, 27]),
     ("2021-01-25-intervention-ce-di0.0-dt10.0", [25, 27]),

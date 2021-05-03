@@ -174,11 +174,13 @@ if __name__ == "__main__":
     iso_time_str = datetime.utcnow().strftime("%Y%m%dT%H%M%S")
 
     checkpoints_and_names = []
-    for (checkpoint_directory, checkpoints) in config.CHECKPOINTS:
+    for (checkpoint_directory, checkpoints) in config.STUDENT_CHECKPOINTS:
         for checkpoint in checkpoints:
             for episode_num in range(config.EPISODES_PER_CHECKPOINT):
                 checkpoint_file = (
-                    config.CHECKPOINTS_PATH / checkpoint_directory / f"{checkpoint}.pth"
+                    config.STUDENT_CHECKPOINTS_PATH
+                    / checkpoint_directory
+                    / f"{checkpoint}.pth"
                 )
                 checkpoints_and_names.append(
                     (
