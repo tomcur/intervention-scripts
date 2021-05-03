@@ -133,7 +133,6 @@ async def execute(
         except asyncio.TimeoutError:
             await soft_kill(collection_process)
 
-    carla_process.terminate()
     await soft_kill(carla_process)
     log_file.close()
 
