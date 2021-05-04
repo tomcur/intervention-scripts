@@ -112,6 +112,7 @@ async def soft_kill(process: asyncio.subprocess.Process) -> None:
         await asyncio.wait_for(process.wait(), timeout=10.0)
     except asyncio.TimeoutError:
         process.kill()
+        await process.wait()
 
 
 async def execute(
