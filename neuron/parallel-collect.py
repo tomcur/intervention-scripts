@@ -122,10 +122,13 @@ async def execute(
     """
     print(f"{cuda_device}.{process_num}: Handling job for {checkpoint_file}")
 
-    log_file = open(
-        f"log-{datetime.now().isoformat()}-cuda-device-{cuda_device}-process-{process_num}.out",
-        "w",
+    log_dir = Path("logs")
+    log_path = (
+        log_dir
+        / f"log-{datetime.now().isoformat()}-cuda-device-{cuda_device}-process-{process_num}.out"
     )
+
+    log_file = open(str(log_filename), "w")
 
     start_port_range = (
         5000 + (process_num + cuda_device * config.PROCESSES_PER_CUDA_DEVICE) * 10
