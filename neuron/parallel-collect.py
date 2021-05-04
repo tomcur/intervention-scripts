@@ -124,6 +124,8 @@ async def execute(
     print(f"{cuda_device}.{process_num}: Handling job for {checkpoint_file}")
 
     log_dir = Path("collect-logs")
+    log_dir.mkdir(exist_ok=True)
+
     log_path = (
         log_dir
         / f"log-{datetime.now().isoformat()}-cuda-device-{cuda_device}-process-{process_num}.out"
