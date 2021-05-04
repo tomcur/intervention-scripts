@@ -213,6 +213,8 @@ if __name__ == "__main__":
             "'teacher', 'student', or 'intervention'"
         )
 
+    print(f"Running collection type {config.COLLECT_TYPE}")
+
     checkpoints_and_names = []
 
     if config.COLLECT_TYPE == "teacher":
