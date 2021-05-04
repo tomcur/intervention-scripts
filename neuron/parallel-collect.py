@@ -218,12 +218,13 @@ if __name__ == "__main__":
     checkpoints_and_names = []
 
     if config.COLLECT_TYPE == "teacher":
-        checkpoints_and_names.append(
-            (
-                config.INTERVENTION_LBC_BIRDVIEW_CHECKPOINT,
-                f"{iso_time_str}-{config.COLLECT_TYPE}",
+        for episode_num in range(config.EPISODES_PER_CHECKPOINT):
+            checkpoints_and_names.append(
+                (
+                    config.INTERVENTION_LBC_BIRDVIEW_CHECKPOINT,
+                    f"{iso_time_str}-{config.COLLECT_TYPE}",
+                )
             )
-        )
     else:
         for (checkpoint_directory, checkpoints) in config.STUDENT_CHECKPOINTS:
             for checkpoint in checkpoints:
