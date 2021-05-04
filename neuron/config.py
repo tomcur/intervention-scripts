@@ -19,6 +19,9 @@ STUDENT_CHECKPOINTS_PATH = Path.home() / "checkpoints"
 
 EPISODES_PER_CHECKPOINT: int = 30
 
+#: One of "teacher", "student", "intervention"
+COLLECT_TYPE = "teacher"
+
 #: List of tuples of checkpoint directories and lists of checkpoint numbers to
 # use of those directories.
 STUDENT_CHECKPOINTS = [

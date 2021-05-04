@@ -52,24 +52,58 @@ async def spawn_intervention(
     environ["CARLA_TRAFFIC_MANAGER_PORT"] = f"{start_port_range}"
     environ["CARLA_WORLD_PORT"] = f"{start_port_range+1}"
 
-    return await asyncio.create_subprocess_exec(
-        "xvfb-run",
-        "--auto-servernum",
-        "intervention-learning",
-        "collect-on-policy",
-        "-s",
-        f"{checkpoint_file}",
-        "-t",
-        f"{config.INTERVENTION_LBC_BIRDVIEW_CHECKPOINT}",
-        "-n",
-        "1",
-        "-d",
-        f"{data_path}",
-        "--metrics-only",
-        env=environ,
-        stdout=log_file,
-        stderr=log_file,
-    )
+    if config.COLLECT_TYPE == "teacher":
+        return await asyncio.create_subprocess_exec(
+            "xvfb-run",
+            "--auto-servernum",
+            "intervention-learning",
+            "collect-teacher",
+            "-t",
+            f"{config.INTERVENTION_LBC_BIRDVIEW_CHECKPOINT}",
+            "-n",
+            "1",
+            "-d",
+            f"{data_path}",
+            env=environ,
+            stdout=log_file,
+            stderr=log_file,
+        )
+    elif config.COLLECT_TYPE == "student":
+        return await asyncio.create_subprocess_exec(
+            "xvfb-run",
+            "--auto-servernum",
+            "intervention-learning",
+            "collect-student",
+            "-s",
+            f"{checkpoint_file}",
+            "-n",
+            "1",
+            "-d",
+            f"{data_path}",
+            env=environ,
+            stdout=log_file,
+            stderr=log_file,
+        )
+    elif config.COLLECT_TYPE == "intervention":
+        return await asyncio.create_subprocess_exec(
+            "xvfb-run",
+            "--auto-servernum",
+            "intervention-learning",
+            "collect-intervention",
+            "-s",
+            f"{checkpoint_file}",
+            "-t",
+            f"{config.INTERVENTION_LBC_BIRDVIEW_CHECKPOINT}",
+            "-n",
+            "1",
+            "-d",
+            f"{data_path}",
+            env=environ,
+            stdout=log_file,
+            stderr=log_file,
+        )
+    else:
+        raise Exception("unknown collect type")
 
 
 async def soft_kill(process: asyncio.subprocess.Process) -> None:
@@ -106,7 +140,7 @@ async def execute(
 
     success = False
     with tempfile.TemporaryDirectory(
-        prefix="intervention-on-policy-", dir=config.TEMPORARY_DIRECTORY
+        prefix="intervention-collect-", dir=config.TEMPORARY_DIRECTORY
     ) as temp_path:
         collection_process = await spawn_intervention(
             cuda_device, start_port_range, checkpoint_file, Path(temp_path), log_file
@@ -173,21 +207,36 @@ if __name__ == "__main__":
 
     iso_time_str = datetime.utcnow().strftime("%Y%m%dT%H%M%S")
 
+    if config.COLLECT_TYPE not in ["teacher", "student", "intervention"]:
+        print(
+            "config.COLLECT_TYPE must be one of "
+            "'teacher', 'student', or 'intervention'"
+        )
+
     checkpoints_and_names = []
-    for (checkpoint_directory, checkpoints) in config.STUDENT_CHECKPOINTS:
-        for checkpoint in checkpoints:
-            for episode_num in range(config.EPISODES_PER_CHECKPOINT):
-                checkpoint_file = (
-                    config.STUDENT_CHECKPOINTS_PATH
-                    / checkpoint_directory
-                    / f"{checkpoint}.pth"
-                )
-                checkpoints_and_names.append(
-                    (
-                        checkpoint_file,
-                        f"{iso_time_str}-on-policy-{checkpoint_directory}-{checkpoint}",
+
+    if config.COLLECT_TYPE == "teacher":
+        checkpoints_and_names.append(
+            (
+                config.INTERVENTION_LBC_BIRDVIEW_CHECKPOINT,
+                f"{iso_time_str}-{config.COLLECT_TYPE}",
+            )
+        )
+    else:
+        for (checkpoint_directory, checkpoints) in config.STUDENT_CHECKPOINTS:
+            for checkpoint in checkpoints:
+                for episode_num in range(config.EPISODES_PER_CHECKPOINT):
+                    checkpoint_file = (
+                        config.STUDENT_CHECKPOINTS_PATH
+                        / checkpoint_directory
+                        / f"{checkpoint}.pth"
                     )
-                )
+                    checkpoints_and_names.append(
+                        (
+                            checkpoint_file,
+                            f"{iso_time_str}-{config.COLLECT_TYPE}-{checkpoint_directory}-{checkpoint}",
+                        )
+                    )
 
     loop = asyncio.new_event_loop()
     asyncio.get_child_watcher().attach_loop(loop)
