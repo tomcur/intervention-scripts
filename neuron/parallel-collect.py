@@ -108,12 +108,23 @@ async def spawn_intervention(
 
 
 async def soft_kill(process: asyncio.subprocess.Process) -> None:
-    process.terminate()
+    # First try terminating...
     try:
+        process.terminate()
         await asyncio.wait_for(process.wait(), timeout=10.0)
+        return
+    except ProcessLookupError:
+        # (can be thrown e.g. if the process has exited in the meantime)
+        return
     except asyncio.TimeoutError:
+        pass
+
+    # ... then try killing
+    try:
         process.kill()
         await process.wait()
+    except ProcessLookupError:
+        return
 
 
 async def execute(
