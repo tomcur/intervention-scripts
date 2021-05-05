@@ -5,7 +5,6 @@ from typing import List, Union, BinaryIO
 import os
 import sys
 import signal
-import subprocess
 import traceback
 import asyncio
 from datetime import datetime
