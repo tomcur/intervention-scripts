@@ -6,6 +6,7 @@ import os
 import sys
 import signal
 import subprocess
+import traceback
 import asyncio
 from datetime import datetime
 from pathlib import Path
@@ -251,5 +252,7 @@ if __name__ == "__main__":
     asyncio.get_child_watcher().attach_loop(loop)
     try:
         loop.run_until_complete(run(checkpoints_and_names))
+    except Exception as e:
+        print(traceback.format_exc())
     finally:
         os.killpg(0, signal.SIGKILL)
