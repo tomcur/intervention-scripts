@@ -133,7 +133,7 @@ async def soft_kill(process: asyncio.subprocess.Process) -> None:
     # First try terminating...
     try:
         process.terminate()
-        await asyncio.wait_for(process.wait(), timeout=10.0)
+        await asyncio.wait_for(process.wait(), timeout=45.0)
         return
     except ProcessLookupError:
         # (can be thrown e.g. if the process has exited in the meantime)
@@ -195,7 +195,8 @@ async def execute(setup: EpisodeSetup, cuda_device: int, process_num: int) -> No
             f"{cuda_device}.{process_num}: Spawned collection ({setup.town}, {setup.weather}), pid: {collection_process.pid}"
         )
         try:
-            await asyncio.wait_for(collection_process.wait(), timeout=10.0 * 60.0)
+            # Time out the collection process after 60 minutes
+            await asyncio.wait_for(collection_process.wait(), timeout=60.0 * 60.0)
 
             if collection_process.returncode == 0:
                 success = True
