@@ -232,7 +232,7 @@ async def executor(
         success = await execute(setup, cuda_device, process_num)
         if not success:
             print(
-                f"{cuda_device}.{process_num}: Collection was unsuccessful, rescheduling {name}"
+                f"{cuda_device}.{process_num}: Collection was unsuccessful, rescheduling {setup.name}"
             )
             episode_setups.append(setup)
 
