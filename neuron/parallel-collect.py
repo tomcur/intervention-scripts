@@ -7,6 +7,8 @@ import sys
 import signal
 import traceback
 import asyncio
+import itertools
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 import tempfile
@@ -14,6 +16,14 @@ import random
 
 sys.path.append(os.getcwd())
 import config
+
+
+@dataclass
+class EpisodeSetup:
+    name: str
+    checkpoint: Path
+    town: str
+    weather: str
 
 
 async def spawn_carla(
@@ -40,6 +50,8 @@ async def spawn_carla(
 
 
 async def spawn_intervention(
+    town: str,
+    weather: str,
     cuda_device: int,
     start_port_range: int,
     checkpoint_file: Path,
@@ -64,6 +76,10 @@ async def spawn_intervention(
             "1",
             "-d",
             f"{data_path}",
+            "--town",
+            f"{town}",
+            "--weather",
+            f"{weather}",
             env=environ,
             stdout=log_file,
             stderr=log_file,
@@ -80,6 +96,10 @@ async def spawn_intervention(
             "1",
             "-d",
             f"{data_path}",
+            "--town",
+            f"{town}",
+            "--weather",
+            f"{weather}",
             env=environ,
             stdout=log_file,
             stderr=log_file,
@@ -98,6 +118,10 @@ async def spawn_intervention(
             "1",
             "-d",
             f"{data_path}",
+            "--town",
+            f"{town}",
+            "--weather",
+            f"{weather}",
             env=environ,
             stdout=log_file,
             stderr=log_file,
@@ -126,13 +150,13 @@ async def soft_kill(process: asyncio.subprocess.Process) -> None:
         return
 
 
-async def execute(
-    checkpoint_file: Path, data_path: Path, cuda_device: int, process_num: int
-) -> None:
+async def execute(setup: EpisodeSetup, cuda_device: int, process_num: int) -> None:
     """
     :return: whether the collection process finished succesfully
     """
-    print(f"{cuda_device}.{process_num}: Handling job for {checkpoint_file}")
+    print(f"{cuda_device}.{process_num}: Handling job for {setup.checkpoint}")
+
+    data_path = config.OUT_DATA_PATH / setup.name
 
     log_dir = Path("collect-logs")
     log_dir.mkdir(exist_ok=True)
@@ -160,10 +184,16 @@ async def execute(
         prefix="intervention-collect-", dir=config.TEMPORARY_DIRECTORY
     ) as temp_path:
         collection_process = await spawn_intervention(
-            cuda_device, start_port_range, checkpoint_file, Path(temp_path), log_file
+            setup.town,
+            setup.weather,
+            cuda_device,
+            start_port_range,
+            setup.checkpoint,
+            Path(temp_path),
+            log_file,
         )
         print(
-            f"{cuda_device}.{process_num}: Spawned collection, pid: {collection_process.pid}"
+            f"{cuda_device}.{process_num}: Spawned collection ({setup.town}, {setup.weather}), pid: {collection_process.pid}"
         )
         try:
             await asyncio.wait_for(collection_process.wait(), timeout=10.0 * 60.0)
@@ -194,25 +224,24 @@ async def execute(
 
 
 async def executor(
-    checkpoints_and_names: List[Union[Path, str]], cuda_device: int, process_num: int
+    episode_setups: List[EpisodeSetup], cuda_device: int, process_num: int
 ) -> None:
-    while len(checkpoints_and_names) > 0:
-        checkpoint_file, name = checkpoints_and_names.pop(0)
-        data_path = config.OUT_DATA_PATH / name
+    while len(episode_setups) > 0:
+        setup = episode_setups.pop(0)
 
         await asyncio.sleep(random.random() * 15)
-        success = await execute(checkpoint_file, data_path, cuda_device, process_num)
+        success = await execute(setup, cuda_device, process_num)
         if not success:
             print(
                 f"{cuda_device}.{process_num}: Collection was unsuccessful, rescheduling {name}"
             )
-            checkpoints_and_names.append((checkpoint_file, name))
+            episode_setups.append(setup)
 
 
-async def run(checkpoints_and_names: List[Union[Path, str]]) -> None:
+async def run(episode_setups: List[EpisodeSetup]) -> None:
     await asyncio.gather(
         *[
-            executor(checkpoints_and_names, cuda_device, process_num)
+            executor(episode_setups, cuda_device, process_num)
             for cuda_device in config.CUDA_DEVICES
             for process_num in range(config.PROCESSES_PER_CUDA_DEVICE)
         ]
@@ -232,36 +261,44 @@ if __name__ == "__main__":
 
     print(f"Running collection type {config.COLLECT_TYPE}")
 
-    checkpoints_and_names = []
+    episode_setups = []
 
     if config.COLLECT_TYPE == "teacher":
-        for episode_num in range(config.EPISODES_PER_CHECKPOINT):
-            checkpoints_and_names.append(
-                (
-                    config.INTERVENTION_LBC_BIRDVIEW_CHECKPOINT,
-                    f"{iso_time_str}-{config.COLLECT_TYPE}",
+        for episode_num, town, weather in zip(
+            range(config.EPISODES_PER_CHECKPOINT), itertools.cycle(config.TOWNS), itertools.cycle(config.WEATHERS)
+        ):
+            episode_setups.append(
+                EpisodeSetup(
+                    name = f"{iso_time_str}-{config.COLLECT_TYPE}",
+                    checkpoint = config.INTERVENTION_LBC_BIRDVIEW_CHECKPOINT,
+                    town = town,
+                    weather = weather,
                 )
             )
     else:
         for (checkpoint_directory, checkpoints) in config.STUDENT_CHECKPOINTS:
             for checkpoint in checkpoints:
-                for episode_num in range(config.EPISODES_PER_CHECKPOINT):
+                for episode_num in zip(
+                    range(config.EPISODES_PER_CHECKPOINT), itertools.cycle(config.TOWNS), itertools.cycle(config.WEATHERS)
+                ):
                     checkpoint_file = (
                         config.STUDENT_CHECKPOINTS_PATH
                         / checkpoint_directory
                         / f"{checkpoint}.pth"
                     )
-                    checkpoints_and_names.append(
-                        (
-                            checkpoint_file,
-                            f"{iso_time_str}-{config.COLLECT_TYPE}-{checkpoint_directory}-{checkpoint}",
+                    episode_setups.append(
+                        EpisodeSetup(
+                            name = f"{iso_time_str}-{config.COLLECT_TYPE}-{checkpoint_directory}-{checkpoint}",
+                            checkpoint = checkpoint_file,
+                            town = town,
+                            weather = weather,
                         )
                     )
 
     loop = asyncio.new_event_loop()
     asyncio.get_child_watcher().attach_loop(loop)
     try:
-        loop.run_until_complete(run(checkpoints_and_names))
+        loop.run_until_complete(run(episode_setups))
     except Exception as e:
         print(traceback.format_exc())
     finally:
