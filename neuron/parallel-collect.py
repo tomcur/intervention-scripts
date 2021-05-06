@@ -1,18 +1,17 @@
 #!/usr/bin/env python3
 
-from typing import List, Union, BinaryIO
-
-import os
-import sys
-import signal
-import traceback
 import asyncio
 import itertools
+import os
+import random
+import signal
+import sys
+import tempfile
+import traceback
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-import tempfile
-import random
+from typing import BinaryIO, List, Union
 
 sys.path.append(os.getcwd())
 import config
@@ -265,21 +264,25 @@ if __name__ == "__main__":
 
     if config.COLLECT_TYPE == "teacher":
         for episode_num, town, weather in zip(
-            range(config.EPISODES_PER_CHECKPOINT), itertools.cycle(config.TOWNS), itertools.cycle(config.WEATHERS)
+            range(config.EPISODES_PER_CHECKPOINT),
+            itertools.cycle(config.TOWNS),
+            itertools.cycle(config.WEATHERS),
         ):
             episode_setups.append(
                 EpisodeSetup(
-                    name = f"{iso_time_str}-{config.COLLECT_TYPE}",
-                    checkpoint = config.INTERVENTION_LBC_BIRDVIEW_CHECKPOINT,
-                    town = town,
-                    weather = weather,
+                    name=f"{iso_time_str}-{config.COLLECT_TYPE}",
+                    checkpoint=config.INTERVENTION_LBC_BIRDVIEW_CHECKPOINT,
+                    town=town,
+                    weather=weather,
                 )
             )
     else:
         for (checkpoint_directory, checkpoints) in config.STUDENT_CHECKPOINTS:
             for checkpoint in checkpoints:
                 for episode_num in zip(
-                    range(config.EPISODES_PER_CHECKPOINT), itertools.cycle(config.TOWNS), itertools.cycle(config.WEATHERS)
+                    range(config.EPISODES_PER_CHECKPOINT),
+                    itertools.cycle(config.TOWNS),
+                    itertools.cycle(config.WEATHERS),
                 ):
                     checkpoint_file = (
                         config.STUDENT_CHECKPOINTS_PATH
@@ -288,10 +291,10 @@ if __name__ == "__main__":
                     )
                     episode_setups.append(
                         EpisodeSetup(
-                            name = f"{iso_time_str}-{config.COLLECT_TYPE}-{checkpoint_directory}-{checkpoint}",
-                            checkpoint = checkpoint_file,
-                            town = town,
-                            weather = weather,
+                            name=f"{iso_time_str}-{config.COLLECT_TYPE}-{checkpoint_directory}-{checkpoint}",
+                            checkpoint=checkpoint_file,
+                            town=town,
+                            weather=weather,
                         )
                     )
 
