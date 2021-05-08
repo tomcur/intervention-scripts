@@ -13,6 +13,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import BinaryIO, List, Union
 
+from loguru import logger
+
 sys.path.append(os.getcwd())
 import config
 
@@ -153,7 +155,7 @@ async def execute(setup: EpisodeSetup, cuda_device: int, process_num: int) -> No
     """
     :return: whether the collection process finished succesfully
     """
-    print(f"{cuda_device}.{process_num}: Handling job for {setup.checkpoint}")
+    logger.trace(f"Using checkpoint {setup.checkpoint}")
 
     data_path = config.OUT_DATA_PATH / setup.name
 
@@ -172,8 +174,8 @@ async def execute(setup: EpisodeSetup, cuda_device: int, process_num: int) -> No
     )
 
     carla_process = await spawn_carla(cuda_device, start_port_range + 1, log_file)
-    print(
-        f"{cuda_device}.{process_num}: Spawned CARLA, pid: {carla_process.pid} (start port range {start_port_range})"
+    logger.debug(
+        f"Spawned CARLA, pid: {carla_process.pid} (start port range {start_port_range})"
     )
 
     await asyncio.sleep(15.0)
@@ -191,8 +193,8 @@ async def execute(setup: EpisodeSetup, cuda_device: int, process_num: int) -> No
             Path(temp_path),
             log_file,
         )
-        print(
-            f"{cuda_device}.{process_num}: Spawned collection ({setup.town}, {setup.weather}), pid: {collection_process.pid}"
+        logger.debug(
+            f"Spawned collection ({setup.town}, {setup.weather}), pid: {collection_process.pid}"
         )
         try:
             # Time out the collection process after 60 minutes
@@ -207,13 +209,13 @@ async def execute(setup: EpisodeSetup, cuda_device: int, process_num: int) -> No
                     f"{data_path}",
                     stdout=log_file,
                 )
-                print(
-                    f"{cuda_device}.{process_num}: Spawned data merging, pid: {collection_process.pid}"
+                logger.debug(
+                    f"Spawned data merging, pid: {collection_process.pid}"
                 )
                 await merge_process.wait()
         except asyncio.TimeoutError:
-            print(
-                f"{cuda_device}.{process_num}: Collection timed out, killing pid: {collection_process.pid}"
+            logger.warning(
+                f"Collection timed out, killing pid: {collection_process.pid}"
             )
             await soft_kill(collection_process)
 
@@ -226,16 +228,25 @@ async def execute(setup: EpisodeSetup, cuda_device: int, process_num: int) -> No
 async def executor(
     episode_setups: List[EpisodeSetup], cuda_device: int, process_num: int
 ) -> None:
-    while len(episode_setups) > 0:
-        setup = episode_setups.pop(0)
+    with logger.contextualize(cuda_device=cuda_device, process_num=process_num):
+        while len(episode_setups) > 0:
+            setup = episode_setups.pop(0)
 
-        await asyncio.sleep(random.random() * 15)
-        success = await execute(setup, cuda_device, process_num)
-        if not success:
-            print(
-                f"{cuda_device}.{process_num}: Collection was unsuccessful, rescheduling {setup.name}"
-            )
-            episode_setups.append(setup)
+            logger.info(f"Starting an episode of {setup.name} at {setup.town} in {setup.weather}")
+
+            sleep_time = random.random() * 15
+            logger.trace(f"Waiting {sleep_time:.2f}s")
+            await asyncio.sleep(sleep_time)
+
+            success = await execute(setup, cuda_device, process_num)
+            if success:
+                logger.success(f"Successfully collected an episode of {setup.name} at {setup.town} in {setup.weather}")
+            else:
+                logger.warning(
+                    f"Collection was unsuccessful, rescheduling an episode of {setup.name} at {setup.town} in {setup.weather}"
+                )
+                episode_setups.append(setup)
+
 
 
 async def run(episode_setups: List[EpisodeSetup]) -> None:
@@ -251,6 +262,19 @@ async def run(episode_setups: List[EpisodeSetup]) -> None:
 if __name__ == "__main__":
     os.setpgrp()
 
+    logger.remove(handler_id=0) # Remove default handler.
+    logger.add(
+        sys.stderr,
+        level="TRACE",
+        format=(
+            "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green>"
+            " | <level>{level: <8}</level>"
+            " | <cyan>{function}</cyan>:<cyan>{line}</cyan>"
+            " | <yellow>{extra}</yellow>"
+            " - <level>{message}</level>"
+        ),
+    )
+
     iso_time_str = datetime.utcnow().strftime("%Y%m%dT%H%M%S")
 
     if config.COLLECT_TYPE not in ["teacher", "student", "intervention"]:
@@ -259,7 +283,7 @@ if __name__ == "__main__":
             "'teacher', 'student', or 'intervention'"
         )
 
-    print(f"Running collection type {config.COLLECT_TYPE}")
+    logger.info(f"Running collection type {config.COLLECT_TYPE}")
 
     episode_setups = []
 
@@ -303,7 +327,8 @@ if __name__ == "__main__":
     asyncio.get_child_watcher().attach_loop(loop)
     try:
         loop.run_until_complete(run(episode_setups))
+        logger.success("All done")
     except Exception as e:
-        print(traceback.format_exc())
+        logger.error(traceback.format_exc())
     finally:
         os.killpg(0, signal.SIGKILL)
