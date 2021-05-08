@@ -209,9 +209,7 @@ async def execute(setup: EpisodeSetup, cuda_device: int, process_num: int) -> No
                     f"{data_path}",
                     stdout=log_file,
                 )
-                logger.debug(
-                    f"Spawned data merging, pid: {collection_process.pid}"
-                )
+                logger.debug(f"Spawned data merging, pid: {collection_process.pid}")
                 await merge_process.wait()
         except asyncio.TimeoutError:
             logger.warning(
@@ -232,7 +230,9 @@ async def executor(
         while len(episode_setups) > 0:
             setup = episode_setups.pop(0)
 
-            logger.info(f"Starting an episode of {setup.name} at {setup.town} in {setup.weather}")
+            logger.info(
+                f"Starting an episode of {setup.name} at {setup.town} in {setup.weather}"
+            )
 
             sleep_time = random.random() * 15
             logger.trace(f"Waiting {sleep_time:.2f}s")
@@ -240,13 +240,14 @@ async def executor(
 
             success = await execute(setup, cuda_device, process_num)
             if success:
-                logger.success(f"Successfully collected an episode of {setup.name} at {setup.town} in {setup.weather}")
+                logger.success(
+                    f"Successfully collected an episode of {setup.name} at {setup.town} in {setup.weather}"
+                )
             else:
                 logger.warning(
                     f"Collection was unsuccessful, rescheduling an episode of {setup.name} at {setup.town} in {setup.weather}"
                 )
                 episode_setups.append(setup)
-
 
 
 async def run(episode_setups: List[EpisodeSetup]) -> None:
@@ -262,7 +263,7 @@ async def run(episode_setups: List[EpisodeSetup]) -> None:
 if __name__ == "__main__":
     os.setpgrp()
 
-    logger.remove(handler_id=0) # Remove default handler.
+    logger.remove(handler_id=0)  # Remove default handler.
     logger.add(
         sys.stderr,
         level="TRACE",
