@@ -1,6 +1,6 @@
 # Intervention launch scripts
 
-These scripts are intended to help use the [Intervention](https://github.com/Beskhue/intervention) code on University of Tartu's Slurm cluster.
+These scripts are intended to help use the [Intervention](https://github.com/tomcur/intervention) code on University of Tartu's Slurm cluster.
 
 ## Example usage
 
@@ -33,7 +33,7 @@ Environment variables:
 
 The scripts assume Conda is installed and available in the current environment.
 Further, the scripts assume the existence of a conda environment called `intervention`,
-providing some dependencies as well as making the [intervention learning executable](https://github.com/Beskhue/intervention/tree/master/scripts/intervention-learning) available.
+providing some dependencies as well as making the [intervention learning executable](https://github.com/tomcur/intervention/tree/master/scripts/intervention-learning) available.
 
 To set this up, run e.g.:
 
@@ -45,6 +45,6 @@ $ python3 -m pip install -r requirements.txt
 $ easy_install path/to/carla/PythonAPI/carla/dist/carla-*-py3.7-linux-x86_64.egg
 ```
 
-Also see the [intervention learning repository](https://github.com/Beskhue/intervention) for specific installation instructions.
+Also see the [intervention learning repository](https://github.com/tomcur/intervention) for specific installation instructions.
 
 Change exported variables in `./prepare-carla-env.sh` to point to a Carla directory.
