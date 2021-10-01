@@ -274,7 +274,6 @@ if __name__ == "__main__":
         format=(
             "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green>"
             " | <level>{level: <8}</level>"
-            " | <cyan>{function}</cyan>:<cyan>{line}</cyan>"
             " | <yellow>{extra}</yellow>"
             " - <level>{message}</level>"
         ),
