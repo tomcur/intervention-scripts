@@ -19,6 +19,9 @@ STUDENT_CHECKPOINTS_PATH = Path.home() / "checkpoints"
 
 EPISODES_PER_CHECKPOINT: int = 30
 
+TOWNS = ["Town01", "Town02"]
+WEATHERS = ["ClearNoon"]
+
 #: One of "teacher", "student", "intervention"
 COLLECT_TYPE = "intervention"
 
