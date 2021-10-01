@@ -306,13 +306,13 @@ if __name__ == "__main__":
                 )
             )
     else:
-        for (checkpoint_directory, checkpoints) in config.STUDENT_CHECKPOINTS:
-            for checkpoint in checkpoints:
-                for episode_num in zip(
-                    range(config.EPISODES_PER_CHECKPOINT),
-                    itertools.cycle(config.TOWNS),
-                    itertools.cycle(config.WEATHERS),
-                ):
+        for episode_num, town, weather in zip(
+            range(config.EPISODES_PER_CHECKPOINT),
+            itertools.cycle(config.TOWNS),
+            itertools.cycle(config.WEATHERS),
+        ):
+            for (checkpoint_directory, checkpoints) in config.STUDENT_CHECKPOINTS:
+                for checkpoint in checkpoints:
                     checkpoint_file = (
                         config.STUDENT_CHECKPOINTS_PATH
                         / checkpoint_directory
