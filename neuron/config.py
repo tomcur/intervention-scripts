@@ -23,12 +23,13 @@ TOWNS = ["Town01", "Town02"]
 WEATHERS = ["ClearNoon"]
 
 #: One of "teacher", "student", "intervention"
+COLLECT_TYPE = "teacher"
 # COLLECT_TYPE = "student"
-# COLLECT_TYPE = "teacher"
-COLLECT_TYPE = "intervention"
+# COLLECT_TYPE = "intervention"
 
-# INTERVENTION_TYPE = "regular"
-INTERVENTION_TYPE = "only-student"
+#: One of "regular", "only-student"
+INTERVENTION_TYPE = "regular"
+# INTERVENTION_TYPE = "only-student"
 
 #: List of tuples of checkpoint directories and lists of checkpoint numbers to
 # use of those directories.
