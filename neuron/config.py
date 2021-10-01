@@ -34,7 +34,5 @@ INTERVENTION_TYPE = "regular"
 #: List of tuples of checkpoint directories and lists of checkpoint numbers to
 # use of those directories.
 STUDENT_CHECKPOINTS = [
-    ("2021-01-25-intervention-ce-di0.0-dt10.0", [25, 27]),
-    ("2021-01-25-intervention-ce-di0.0-dt10.0", [25, 27]),
-    ("2021-01-25-intervention-ce-di0.0-dt10.0", [25, 27]),
+    ("2021-01-25-student", [4, 9]),
 ]
